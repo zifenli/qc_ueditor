@@ -9,6 +9,6 @@ module.exports = {
         build_path: `${dirVars.rootDir}/apps/project1/build-scripts/build.js`,
         pre_publish_path: `${dirVars.rootDir}/apps/project1/build-scripts/pre_build.js`,
         config:`${dirVars.rootDir}/apps/qc_ueditor/config/index.js`,
-        version_json:`${dirVars.rootDir}/apps/qc_ueditor/package.json`
+        version_json:`${dirVars.rootDir}/apps/ueditor/package.json`
     }
 }
