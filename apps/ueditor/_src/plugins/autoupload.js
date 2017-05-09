@@ -10,41 +10,37 @@ UE.plugin.register('autoupload', function (){
     function sendAndInsertFile(file, editor) {
         var me  = editor;
         //模拟数据
-        var fieldName, urlPrefix, maxSize, allowFiles, actionUrl,
-            loadingHtml, errorHandler, successHandler,upyunConfig,upyun,
+        var loadingHtml, errorHandler, successHandler,upyunConfig,upyun,
             filetype = /image\/\w+/i.test(file.type) ? 'image':'file',
             loadingId = 'loading_' + (+new Date()).toString(36);
 
-        fieldName = me.getOpt(filetype + 'FieldName');
-        urlPrefix = me.getOpt(filetype + 'UrlPrefix');
-        maxSize = me.getOpt(filetype + 'MaxSize');
-        allowFiles = me.getOpt(filetype + 'AllowFiles');
-        //actionUrl = me.getActionUrl(me.getOpt(filetype + 'ActionName'));
+        //urlPrefix，maxSize，allowFiles，actionUrl都由upyun提供
         upyunConfig=me.getOpt('upyunConfig');
         upyun=new UE.upyun(upyunConfig);
-        errorHandler = function(title) {
+
+        errorHandler = function(response) {
+            response = JSON.parse(response.responseText);
+
             var loader = me.document.getElementById(loadingId);
             loader && domUtils.remove(loader);
-            me.fireEvent('showmessage', {
-                'id': loadingId,
-                'content': title,
-                'type': 'error',
-                'timeout': 4000
-            });
+
+            alert(response.message);
         };
 
         if (filetype == 'image') {
             loadingHtml = '<img class="loadingclass" id="' + loadingId + '" src="' +
                 me.options.themePath + me.options.theme + '/images/spacer.gif">';
-            successHandler = function(event) {
-                event = JSON.parse(event.responseText);
-                var link = (urlPrefix || upyun.urlPrefix) + event.url,
+
+            successHandler = function(response) {
+                response = JSON.parse(response.responseText);
+
+                var link = upyun.urlPrefix + response.url,
                     loader = me.document.getElementById(loadingId);
                 if (loader) {
                     domUtils.removeClasses(loader, 'loadingclass');
                     loader.setAttribute('src', link);
                     loader.setAttribute('_src', link);
-                    loader.setAttribute('alt', event.original || '');
+                    loader.setAttribute('alt', response.original || '');
                     loader.removeAttribute('id');
                     me.trigger('contentchange',loader);
                 }
@@ -70,52 +66,14 @@ UE.plugin.register('autoupload', function (){
 
         /* 插入loading的占位符 */
         me.execCommand('inserthtml', loadingHtml);
-        // /* 判断后端配置是否没有加载成功 */
-        // if (!me.getOpt(filetype + 'ActionName')) {
-        //     errorHandler(me.getLang('autoupload.errorLoadConfig'));
-        //     return;
-        // }
-        /* 判断文件大小是否超出限制 */
-        if(file.size > maxSize) {
-            errorHandler(me.getLang('autoupload.exceedSizeError'));
-            return;
-        }
-        /* 判断文件格式是否超出允许 */
-        var fileext = file.name ? file.name.substr(file.name.lastIndexOf('.')):'';
-        if ((fileext && filetype != 'image') || (allowFiles && (allowFiles.join('') + '.').indexOf(fileext.toLowerCase() + '.') == -1)) {
-            errorHandler(me.getLang('autoupload.exceedTypeError'));
-            return;
-        }
 
         upyun.upload(file,successHandler,errorHandler);
-
-        /* 创建Ajax并提交 */
-        // var xhr = new XMLHttpRequest(),
-        //     fd = new FormData(),
-        //     params = utils.serializeParam(me.queryCommandValue('serverparam')) || '',
-        //     url = utils.formatUrl(actionUrl + (actionUrl.indexOf('?') == -1 ? '?':'&') + params);
-
-        // fd.append(fieldName, file, file.name || ('blob.' + file.type.substr('image/'.length)));
-        // fd.append('type', 'ajax');
-        // xhr.open("post", url, true);
-        // xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        // xhr.addEventListener('load', function (e) {
-        //     try{
-        //         var json = (new Function("return " + utils.trim(e.target.response)))();
-        //         if (json.state == 'SUCCESS' && json.url) {
-        //             successHandler(json);
-        //         } else {
-        //             errorHandler(json.state);
-        //         }
-        //     }catch(er){
-        //         errorHandler(me.getLang('autoupload.loadError'));
-        //     }
-        // });
-        // xhr.send(fd);
     }
 
     function getPasteImage(e){
-        return e.clipboardData && e.clipboardData.items && e.clipboardData.items.length == 1 && /^image\//.test(e.clipboardData.items[0].type) ? e.clipboardData.items:null;
+        //firefox clipboardData 无items
+        //return e.clipboardData && e.clipboardData.items && e.clipboardData.items.length == 1 && /^image\//.test(e.clipboardData.items[0].type) ? e.clipboardData.items:null;
+        return e.clipboardData && e.clipboardData.files && e.clipboardData.files.length ? e.clipboardData.files : null;
     }
     function getDropImage(e){
         return  e.dataTransfer && e.dataTransfer.files ? e.dataTransfer.files:null;
@@ -146,15 +104,15 @@ UE.plugin.register('autoupload', function (){
                 if(window.FormData && window.FileReader) {
                     var handler = function(e){
                         var hasImg = false,
-                            items;
+                            files;
                         //获取粘贴板文件列表或者拖放文件列表
-                        items = e.type == 'paste' ? getPasteImage(e):getDropImage(e);
-                        if(items){
-                            var len = items.length,
+                        files = e.type == 'paste' ? getPasteImage(e):getDropImage(e);
+                        if(files){
+                            var len = files.length,
                                 file;
                             while (len--){
-                                file = items[len];
-                                if(file.getAsFile) file = file.getAsFile();
+                                file = files[len];
+                                //if(file.getAsFile) file = file.getAsFile();
                                 if(file && file.size > 0) {
                                     sendAndInsertFile(file, me);
                                     hasImg = true;
