@@ -24,7 +24,13 @@ UE.plugin.register('autoupload', function (){
             var loader = me.document.getElementById(loadingId);
             loader && domUtils.remove(loader);
 
-            alert(response.message);
+            //alert(response.message);
+            me.fireEvent('showmessage', {
+                'id': loadingId,
+                'content': response.message,
+                'type': 'error',
+                'timeout': 4000
+            });
         };
 
         if (filetype == 'image') {

@@ -346,6 +346,9 @@ UE.plugins['paste'] = function () {
             if ((browser.ie || browser.opera) && ((!e.ctrlKey && !e.metaKey) || e.keyCode != '86')) {
                 return;
             }
+
+            if(e.clipboardData.files && e.clipboardData.files.length) return;
+
             getClipboardData.call(me, function (div) {
                 filter(div);
             });
