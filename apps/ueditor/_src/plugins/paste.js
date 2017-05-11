@@ -48,7 +48,8 @@ UE.plugins['paste'] = function () {
             } catch (e) {
             }
             range.moveToBookmark(bk).select(true);
-            callback(pastebin);
+            replaceSrcToCdn(pastebin, callback);
+            //callback(pastebin);
         }, 0);
     }
 
@@ -59,6 +60,69 @@ UE.plugins['paste'] = function () {
     });
 
     var txtContent, htmlContent, address;
+    
+    function replaceSrcToCdn(pastebin, callback) {
+        var images, canvas,
+            upyunConfig=me.getOpt('upyunConfig'),
+            upyun=new UE.upyun(upyunConfig);
+
+        images = pastebin.getElementsByTagName('img');
+        canvas = document.createElement("canvas");
+
+        for(var i=0, img = images[i]; i<images.length; i++){
+            var image = new Image();
+            image.crossOrigin = 'Anonymous';
+            uploadUpyun();
+        }
+
+        function uploadUpyun() {
+            var _index = i,_image = image;
+
+            try{
+                _image.onload = onloadCb();
+                _image.onerror = onerrorCb;
+                _image.src = images[_index].src;
+            }catch(error){
+                alert(error);
+            }
+
+            function onloadCb(data) {
+                return function () {
+                    canvas.width = _image.width;
+                    canvas.height = _image.height;
+
+                    var ctx = canvas.getContext("2d");
+                    ctx.drawImage(_image, 0, 0, _image.width, _image.height);
+
+                    canvas.toBlob(function (blob) {
+                        upyun.upload(blob,function (response) {
+                            response = JSON.parse(response.responseText);
+                            var link = upyun.urlPrefix + response.url;
+
+                            images[_index].setAttribute('data-imgurl',link);
+                            images[_index].setAttribute('src',link);
+
+                            if(_index == images.length-1){
+                                callback(pastebin);
+                            }
+                        },function (response) {
+                            response = JSON.parse(response.responseText);
+                            alert(response.message);
+                        });
+                    });
+                }
+            }
+
+            function onerrorCb() {
+                images[_index].setAttribute('data-imgurl','');
+                images[_index].setAttribute('src','');
+
+                if(_index == images.length-1){
+                    callback(pastebin);
+                }
+            }
+        }
+    }
 
     function getPureHtml(html){
         return html.replace(/<(\/?)([\w\-]+)([^>]*)>/gi, function (a, b, tagName, attrs) {
