@@ -11,7 +11,6 @@ var buildScript = require('./gulp-scripts/build');
 var options = require('./gulp-scripts/options');
 var tasks = require('./gulp-scripts/all.tasks');
 
-
 gulp.task('collectDists', function () {
     return tasks.collectDists();
 });

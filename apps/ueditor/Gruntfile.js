@@ -42,6 +42,7 @@ module.exports = function (grunt) {
         server = grunt.option('server') || 'php',
         encode = grunt.option('encode') || 'utf8',
         disDir = "dist/",
+        //disDir = '/Users/lizifen/projects/fitness/applications/control/static/web_admin/ueditor/',
         banner = '/*!\n * ' + packageJson.name + '\n * version: ' + packageJson.version + '\n * build: <%= new Date() %>\n */\n\n';
 
     //init
@@ -51,6 +52,7 @@ module.exports = function (grunt) {
         encode = typeof encode === "string" ? encode.toLowerCase() : 'utf8';
 
         disDir = 'dist/';
+        //disDir = '/Users/lizifen/projects/fitness/applications/control/static/web_admin/ueditor/';
 
     })();
 
@@ -60,7 +62,7 @@ module.exports = function (grunt) {
             js: {
                 options: {
                     banner: '/*!\n * ' + packageJson.name + '\n * version: ' + packageJson.version + '\n * build: <%= new Date() %>\n */\n\n' +
-                        '(function(){\n\n',
+                    '(function(){\n\n',
                     footer: '\n\n})();\n',
                     process: function (src, s) {
                         var filename = s.substr(s.indexOf('/') + 1);
@@ -73,7 +75,7 @@ module.exports = function (grunt) {
             parse: {
                 options: {
                     banner: '/*!\n * ' + packageJson.name + ' parse\n * version: ' + packageJson.version + '\n * build: <%= new Date() %>\n */\n\n' +
-                        '(function(){\n\n',
+                    '(function(){\n\n',
                     footer: '\n\n})();\n'
                 },
                 src: Util.fetchScripts("ueditor.parse.js", Util.parseBasePath),

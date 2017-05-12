@@ -5,10 +5,10 @@
 var dirVars = require('../config/dir.config')
 
 module.exports = {
-    qc_ueditor: {
-        build_path: `${dirVars.rootDir}/apps/project1/build-scripts/build.js`,
-        pre_publish_path: `${dirVars.rootDir}/apps/project1/build-scripts/pre_build.js`,
-        config:`${dirVars.rootDir}/apps/qc_ueditor/config/index.js`,
+    ueditor: {
+        build_path: `${dirVars.rootDir}/apps/ueditor/build-scripts/build.js`,
+        pre_publish_path: `${dirVars.rootDir}/apps/ueditor/build-scripts/pre_build.js`,
+        config:`${dirVars.rootDir}/apps/ueditor/config/index.js`,
         version_json:`${dirVars.rootDir}/apps/ueditor/package.json`
     }
 }

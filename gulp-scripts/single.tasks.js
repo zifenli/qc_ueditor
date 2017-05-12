@@ -11,14 +11,25 @@ var _ = require('lodash');
 var fs = require('fs');
 var build = require('./build');
 var options = require('./options');
+var inquirer = require('inquirer');
 
 var VERSION;
+var versions={};
 var tasks = {};
 var project = options.dir;
 
+function getVersion() {
+    _.forEach(projects,function (project) {
+        if(buildConfig[project].version_json){
+            var json=fs.readFileSync(buildConfig[project].version_json,'utf8');
+            versions[project]=JSON.parse(json).version;
+        }
+    })
+};
+
 //收集每个项目的静态文件，放到dist目录下面
 tasks.collectDists = function (src, dest) {
-    src = src || [`${dirVars.rootDir}/apps/${project}/dist/**/*`, `!${dirVars.rootDir}/apps/${project}/dist/*`];
+    src = src || [`${dirVars.rootDir}/apps/${project}/dist/**/*`];
     dest = dest || `${dirVars.destDir}/${project}/`;
 
     return gulp.src(src)
@@ -41,16 +52,18 @@ tasks.buildVersion = function (src) {
             var compiled = _.template(deployConfig.cdnLink);
             VERSION = Date.now();
 
+            getVersion();
+
             //因为是全量部署，所以每次部署，都要替换每个项目的静态文件的目录
             json[project] = json[project] || {};
-            json[project].version = VERSION;
+            json[project].version = versions[item];
             json[project].dev = {
                 "_env": "development",
                 "_root": `/static/${project}/`
             }
             json[project].pro = {
                 "_env": "production",
-                "_root": compiled({version: VERSION, project: project})
+                "_root": compiled({version: versions[item] ? versions[item] : VERSION, project: item})
             }
             return json;
         }))
@@ -75,7 +88,7 @@ tasks.uploadCdn = function (src) {
     src = `${dirVars.destDir}/${project}/**/*`;
 
     return gulp.src(src)
-        .pipe($.upyun.upyunDest(compiled({version: VERSION, project: project}), deployConfig.cdnAccount))
+        .pipe($.upyun.upyunDest(compiled({version: versions[project] ? versions[project] : VERSION, project: project}), {username:'chenchiyuan',password:password}))
 };
 
 tasks.clean = function (src) {
@@ -84,4 +97,15 @@ tasks.clean = function (src) {
     return gulp.src(src, {read: false})
         .pipe($.clean());
 };
+
+tasks.uploadFiles=function (done) {
+    inquirer.prompt([{
+        type: 'password',
+        message: 'Please enter your password:',
+        name: 'password'
+    }]).then(function(answers){
+        tasks.uploadCdn(answers.password);
+        done();
+    })
+}
 module.exports = tasks;
