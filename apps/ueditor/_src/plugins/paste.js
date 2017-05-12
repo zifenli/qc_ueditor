@@ -124,35 +124,52 @@ UE.plugins['paste'] = function () {
                     var ctx = canvas.getContext("2d");
                     ctx.drawImage(_image, 0, 0, _image.width, _image.height);
 
-                    canvas.toBlob(function (blob) {
-                        upyun.upload(blob,function (response) {
-                            response = JSON.parse(response.responseText);
-                            var link = upyun.urlPrefix + response.url;
-                            var loader =  me.document.getElementById(images[_index].id);
+                    function successHandler(response) {
+                        response = JSON.parse(response.responseText);
+                        var link = upyun.urlPrefix + response.url;
+                        var loader = me.document.getElementById(images[_index].id);
 
-                            if(loader){
-                                domUtils.removeClasses(loader, 'loadingclass');
-                                loader.setAttribute('data-imgurl', link);
-                                loader.setAttribute('src', link);
-                                loader.setAttribute('_src', link);
-                                loader.setAttribute('data-ratio', (_image.width/_image.height).toFixed(2));
-                                loader.setAttribute('alt', response.original || '');
-                                loader.removeAttribute('id');
-                                me.trigger('contentChange',loader);
-                            }
+                        if (loader) {
+                            domUtils.removeClasses(loader, 'loadingclass');
+                            loader.setAttribute('data-imgurl', link);
+                            loader.setAttribute('src', link);
+                            loader.setAttribute('_src', link);
+                            loader.setAttribute('data-ratio', (_image.width / _image.height).toFixed(2));
+                            loader.setAttribute('alt', response.original || '');
+                            loader.removeAttribute('id');
+                            me.trigger('contentChange', loader);
+                        }
 
-                        },function (response) {
-                            response = JSON.parse(response.responseText);
+                    }
 
-                            onerrorCb();
-                            me.fireEvent('showmessage', {
-                                'id': images[_index].id,
-                                'content': response.message,
-                                'type': 'error',
-                                'timeout': 4000
-                            });
+                    function errorHandler(response) {
+                        response = JSON.parse(response.responseText);
+
+                        onerrorCb();
+                        me.fireEvent('showmessage', {
+                            'id': images[_index].id,
+                            'content': response.message,
+                            'type': 'error',
+                            'timeout': 4000
                         });
-                    });
+                    }
+
+                    //safari不支持toBlob，将base64转成blob
+                    if(!canvas.toBlob){
+                        var byteCharacters = atob(canvas.toDataURL().split(',')[1]);
+                        var byteNumbers = new Array(byteCharacters.length);
+                        for (var i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        var byteArray = new Uint8Array(byteNumbers);
+                        var blob = new Blob([byteArray], {type: canvas.toDataURL().split(',')[0].split(':')[1].split(':')[0]});
+
+                        upyun.upload(blob,successHandler,errorHandler)
+                    }else {
+                        canvas.toBlob(function (blob) {
+                            upyun.upload(blob, successHandler, errorHandler);
+                        });
+                    }
                 }
             }
 
