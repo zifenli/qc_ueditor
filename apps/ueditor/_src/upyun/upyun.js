@@ -18,7 +18,7 @@ UE.upyun = function () {
                 expiration: parseInt(new Date().getTime() / 1000) + 600000,
                 'save-key': '/{filemd5}{.suffix}',
                 'allow-file-type': 'jpg,jpeg,png,doc,docx,pdf,xls,xlsx,numbers',
-                'content-length-range' : '1024,10240000'
+                'content-length-range' : '0,1024000'
             }
         }
         
