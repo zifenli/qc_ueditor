@@ -46,6 +46,7 @@ UE.plugin.register('autoupload', function (){
                     loader.setAttribute('src', link);
                     loader.setAttribute('_src', link);
                     loader.setAttribute('alt', response.original || '');
+                    loader.setAttribute('data-ratio', (response['image-width'] / response['image-height']).toFixed(2));
                     loader.removeAttribute('id');
                     me.trigger('contentchange',loader);
                 }
