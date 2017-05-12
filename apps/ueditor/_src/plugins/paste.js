@@ -17,7 +17,7 @@ UE.plugins['paste'] = function () {
         }
         var range = this.selection.getRange(),
             bk = range.createBookmark(),
-        //创建剪贴的容器div
+            //创建剪贴的容器div
             pastebin = doc.createElement('div');
         pastebin.id = 'baidu_pastebin';
         // Safari 要求div必须有内容，才能粘贴内容进来
@@ -48,7 +48,8 @@ UE.plugins['paste'] = function () {
             } catch (e) {
             }
             range.moveToBookmark(bk).select(true);
-            replaceSrcToCdn(pastebin, callback);
+            replaceSrcToSpacer(pastebin, callback);
+            //replaceSrcToCdn(pastebin, callback);
             //callback(pastebin);
         }, 0);
     }
@@ -60,23 +61,52 @@ UE.plugins['paste'] = function () {
     });
 
     var txtContent, htmlContent, address;
-    
-    function replaceSrcToCdn(pastebin, callback) {
-        var images, canvas,
+
+    function replaceSrcToSpacer(pastebin, callback) {
+        var imgs, spacer,loadingId,images = [];
+
+        imgs = pastebin.getElementsByTagName('img');
+        spacer = me.options.themePath + me.options.theme + '/images/spacer.gif';
+
+        for(var i=0; i<imgs.length; i++){
+            loadingId = 'loading_' + (+new Date()).toString(36);
+
+            images.push({
+                id:loadingId,
+                src: imgs[i].src
+            });
+
+            imgs[i].setAttribute('data-imgurl',spacer);
+            imgs[i].setAttribute('src',spacer);
+            imgs[i].className += ' loadingclass';
+            imgs[i].style.background = null;
+            imgs[i].style.border = '1px solid #cccccc';
+            imgs[i].id = loadingId;
+
+            if(i == imgs.length-1){
+                callback(pastebin);
+            }
+        }
+
+        replaceSrcToCdn(images);
+    }
+
+    function replaceSrcToCdn(images) {
+        var canvas,image,
             upyunConfig=me.getOpt('upyunConfig'),
             upyun=new UE.upyun(upyunConfig);
 
-        images = pastebin.getElementsByTagName('img');
         canvas = document.createElement("canvas");
 
-        for(var i=0, img = images[i]; i<images.length; i++){
+        for(var i=0; i<images.length; i++){
             var image = new Image();
             image.crossOrigin = 'Anonymous';
             uploadUpyun();
         }
 
         function uploadUpyun() {
-            var _index = i,_image = image;
+            var _index = i,_image = image,
+                _defaultImg = 'http://zoneke-img.b0.upaiyun.com/745bb6531bc857803a0905a3298d0632.png!middle';
 
             try{
                 _image.onload = onloadCb();
@@ -98,28 +128,45 @@ UE.plugins['paste'] = function () {
                         upyun.upload(blob,function (response) {
                             response = JSON.parse(response.responseText);
                             var link = upyun.urlPrefix + response.url;
+                            var loader =  me.document.getElementById(images[_index].id);
 
-                            images[_index].setAttribute('data-imgurl',link);
-                            images[_index].setAttribute('src',link);
-
-                            if(_index == images.length-1){
-                                callback(pastebin);
+                            if(loader){
+                                domUtils.removeClasses(loader, 'loadingclass');
+                                loader.setAttribute('data-imgurl', link);
+                                loader.setAttribute('src', link);
+                                loader.setAttribute('_src', link);
+                                loader.setAttribute('data-ratio', (_image.width/_image.height).toFixed(2));
+                                loader.setAttribute('alt', response.original || '');
+                                loader.removeAttribute('id');
+                                me.trigger('contentChange',loader);
                             }
+
                         },function (response) {
                             response = JSON.parse(response.responseText);
-                            alert(response.message);
+
+                            onerrorCb();
+                            me.fireEvent('showmessage', {
+                                'id': images[_index].id,
+                                'content': response.message,
+                                'type': 'error',
+                                'timeout': 4000
+                            });
                         });
                     });
                 }
             }
 
             function onerrorCb() {
-                images[_index].setAttribute('data-imgurl','');
-                images[_index].setAttribute('src','');
+                var loader =  me.document.getElementById(images[_index].id);
 
-                if(_index == images.length-1){
-                    callback(pastebin);
-                }
+                domUtils.removeClasses(loader, 'loadingclass');
+                loader.setAttribute('data-imgurl', _defaultImg);
+                loader.setAttribute('src', _defaultImg);
+                loader.setAttribute('_src', _defaultImg);
+                loader.setAttribute('data-ratio', 2);
+                loader.removeAttribute('id');
+                loader.removeAttribute('style');
+                me.trigger('contentChange',loader);
             }
         }
     }
@@ -132,18 +179,18 @@ UE.plugins['paste'] = function () {
             }
             attrs = attrs.replace(/([\w\-]*?)\s*=\s*(("([^"]*)")|('([^']*)')|([^\s>]+))/gi, function (str, atr, val) {
                 if ({
-                    'src': 1,
-                    'href': 1,
-                    'name': 1
-                }[atr.toLowerCase()]) {
+                        'src': 1,
+                        'href': 1,
+                        'name': 1
+                    }[atr.toLowerCase()]) {
                     return atr + '=' + val + ' '
                 }
                 return ''
             });
             if ({
-                'span': 1,
-                'div': 1
-            }[tagName]) {
+                    'span': 1,
+                    'div': 1
+                }[tagName]) {
                 return ''
             } else {
 
@@ -324,7 +371,7 @@ UE.plugins['paste'] = function () {
             me.__hasEnterExecCommand = false;
             var rng = me.selection.getRange();
             while (!domUtils.isBody(rng.startContainer) && !rng.startOffset &&
-                rng.startContainer[rng.startContainer.nodeType == 3 ? 'nodeValue' : 'childNodes'].length
+            rng.startContainer[rng.startContainer.nodeType == 3 ? 'nodeValue' : 'childNodes'].length
                 ) {
                 rng.setStartBefore(rng.startContainer);
             }
