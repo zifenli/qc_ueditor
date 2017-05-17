@@ -68,27 +68,32 @@ UE.plugins['paste'] = function () {
         imgs = pastebin.getElementsByTagName('img');
         spacer = me.options.themePath + me.options.theme + '/images/spacer.gif';
 
-        for(var i=0; i<imgs.length; i++){
-            loadingId = 'loading_' + (+new Date()).toString(36);
+        if(imgs.length){
+            for(var i=0; i<imgs.length; i++){
+                loadingId = 'loading_' + (+new Date()).toString(36);
 
-            images.push({
-                id:loadingId,
-                src: imgs[i].src
-            });
+                images.push({
+                    id:loadingId,
+                    src: imgs[i].src
+                });
 
-            imgs[i].setAttribute('data-imgurl',spacer);
-            imgs[i].setAttribute('src',spacer);
-            imgs[i].className += ' loadingclass';
-            imgs[i].style.background = null;
-            imgs[i].style.border = '1px solid #cccccc';
-            imgs[i].id = loadingId;
+                imgs[i].setAttribute('data-imgurl',spacer);
+                imgs[i].setAttribute('src',spacer);
+                imgs[i].className += ' loadingclass';
+                imgs[i].style.background = null;
+                imgs[i].style.border = '1px solid #cccccc';
+                imgs[i].id = loadingId;
 
-            if(i == imgs.length-1){
-                callback(pastebin);
+                if(i == imgs.length-1){
+                    callback(pastebin);
+                }
             }
-        }
 
-        replaceSrcToCdn(images);
+            replaceSrcToCdn(images);
+
+        }else{
+            callback(pastebin);
+        }
     }
 
     function replaceSrcToCdn(images) {
