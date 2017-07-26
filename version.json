@@ -1,13 +1,13 @@
 {
   "ueditor": {
-    "version": "0.0.4",
+    "version": "0.0.5",
     "dev": {
       "_env": "development",
       "_root": "/static/ueditor/"
     },
     "pro": {
       "_env": "production",
-      "_root": "http://qcfile.b0.upaiyun.com/qingcheng/frontend/lib/ueditor/0.0.4/"
+      "_root": "http://qcfile.b0.upaiyun.com/qingcheng/frontend/lib/ueditor/0.0.5/"
     }
   }
 }
