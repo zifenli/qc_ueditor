@@ -5,7 +5,8 @@ UE.upyun = function () {
 
     function UpyunUploader(configs) {
         this.configs = UE.utils.extend(_getDefaultConfigs(), configs);
-        this.urlPrefix="http://" + this.configs.bucket + ".b0.upaiyun.com";
+        this.protocol = location.protocol;
+        this.urlPrefix= this.protocol + "//" + this.configs.bucket + ".b0.upaiyun.com";
         this.ajaxConfig={
             timeout:50000,
             csrftoken:_getCookies().csrftoken
@@ -50,7 +51,7 @@ UE.upyun = function () {
 
     UpyunUploader.prototype = {
         upload: function (file, successCb,errorCb, config) {
-            var _self=this;
+            var _self = this;
             var _configs = UE.utils.extend(this.configs, config || {});
 
             UE.ajax.request('/core/signature/', {
@@ -63,7 +64,7 @@ UE.upyun = function () {
                     event = JSON.parse(event.responseText);
                     var _signature = event.data.signature;
                     var _policy = event.data.policy;
-                    var url = "http://v0.api.upyun.com/" + _configs.bucket;
+                    var url = _self.protocol + "//v0.api.upyun.com/" + _configs.bucket;
 
                     var fd = new FormData();
                     fd.append("file", file);
