@@ -67,7 +67,7 @@ tasks.buildVersion = function () {
 
           _.forEach(projects, function (item) {
               json[item] = json[item] || {};
-              json[item].version = versions[item];
+              json[item].version = versions[item] ? versions[item] : VERSION;
               json[item].dev = {
                   "_env": "development",
                   "_root": `/static/${item}/`
@@ -102,6 +102,24 @@ tasks.replaceCdnLink = function () {
     return stream;
 };
 
+tasks.replaceBaseUrl = function (src) {
+    var compiled = _.template(deployConfig.cdnLink);
+
+    _.forEach(projects, function (item) {
+
+        var projectConfig = require(buildConfig[item].config);
+
+        var src = src || [`${dirVars.destDir}/${item}/ueditor.config.js`];
+        var dest = `${dirVars.destDir}/${item}/`;
+
+        stream = gulp.src(src)
+          .pipe($.replace('./', compiled({version: versions[item] ? versions[item] : VERSION, project: item})))
+          .pipe(gulp.dest(dest));
+    })
+
+    return stream;
+}
+
 //上传CDN，./dist下的所有文件
 tasks.uploadCdn = function (password) {
     var compiled = _.template(deployConfig.cdnFolder);
@@ -123,7 +141,7 @@ tasks.uploadFiles=function (done) {
         type: 'password',
         message: 'Please enter your password:',
         name: 'password'
-    }]).then(function(answers){
+    }], function(answers){
         tasks.uploadCdn(answers.password);
         done();
     })

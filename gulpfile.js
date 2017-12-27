@@ -23,6 +23,10 @@ gulp.task('replaceCdnLink', function () {
     return tasks.replaceCdnLink();
 });
 
+gulp.task('replaceBaseUrl', function () {
+    return tasks.replaceBaseUrl();
+});
+
 gulp.task('uploadCdn', function () {
     return tasks.uploadCdn();
 });
@@ -40,7 +44,7 @@ gulp.task('build', buildScript);
 gulp.task('publish', function () {
     runSequence(
         ['collectDists','buildVersion']
-        //,'replaceCdnLink'
+        ,'replaceBaseUrl'
         ,'uploadFiles'
     )
 });
