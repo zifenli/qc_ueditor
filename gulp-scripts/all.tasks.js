@@ -103,7 +103,7 @@ tasks.replaceCdnLink = function () {
 };
 
 tasks.replaceBaseUrl = function (src) {
-    var compiled = _.template(deployConfig.cdnLink);
+    var compiled = _.template(deployConfig.qcStaticLink);
 
     _.forEach(projects, function (item) {
 
