@@ -30,7 +30,7 @@
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
     "lodash": "^4.15.0",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.6",
     "moment": "^2.14.1",
     "run-sequence": "^1.2.2",
     "swiper": "^3.3.1",
